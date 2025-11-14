@@ -2,7 +2,7 @@ import { requireOrgId } from '@/lib/auth'
 import { KPICard } from '@/components/dashboard/kpi-card'
 import { Users, TrendingUp, Award, DollarSign, Phone, Target } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { getAgentMetrics, getAgentLeaderboard, formatDuration } from '@/lib/queries/agent-metrics'
+import { getAgentPerformance, getAgentLeaderboard, formatDuration } from '@/lib/queries/agent-metrics'
 import { DashboardWrapper } from '@/components/dashboard/dashboard-wrapper'
 import { prisma } from '@/lib/db'
 import { Badge } from '@/components/ui/badge'
@@ -53,13 +53,13 @@ export default async function AgentsPage({ searchParams }: { searchParams: Promi
     }
 
     // Fetch agent metrics
-    const agentMetrics = await getAgentMetrics(org.id, dateRange)
-    const topConversions = await getAgentLeaderboard(org.id, dateRange, 'conversions')
-    const topConversionRate = await getAgentLeaderboard(org.id, dateRange, 'conversionRate')
+    const agentMetrics = await getAgentPerformance(org.id, { from: startDate, to: endDate })
+    const topConversions = await getAgentLeaderboard(org.id, { startDate, endDate }, 'conversions')
+    const topConversionRate = await getAgentLeaderboard(org.id, { startDate, endDate }, 'conversionRate')
 
     // Calculate overall stats
     const totalAgents = agentMetrics.length
-    const totalCalls = agentMetrics.reduce((sum, a) => sum + a.totalCalls, 0)
+    const totalCalls = agentMetrics.reduce((sum, a) => sum + a.calls, 0)
     const totalConversions = agentMetrics.reduce((sum, a) => sum + a.conversions, 0)
     const avgConversionRate = totalCalls > 0 ? (totalConversions / totalCalls) * 100 : 0
     const avgCallScore = agentMetrics.reduce((sum, a) => sum + a.avgCallScore, 0) / (totalAgents || 1)
@@ -207,40 +207,40 @@ export default async function AgentsPage({ searchParams }: { searchParams: Promi
                     </tr>
                   </thead>
                   <tbody>
-                    {agentMetrics.map((agent) => (
-                      <tr key={agent.agentName} className="border-b border-border/30 hover:bg-muted/50 transition-colors">
+                    {agentMetrics.map((agentData) => (
+                      <tr key={agentData.agent} className="border-b border-border/30 hover:bg-muted/50 transition-colors">
                         <td className="p-3">
-                          <div className="font-medium">{agent.agentName}</div>
+                          <div className="font-medium">{agentData.agent}</div>
                         </td>
-                        <td className="p-3 text-right number-display">{agent.totalCalls.toLocaleString()}</td>
+                        <td className="p-3 text-right number-display">{agentData.calls.toLocaleString()}</td>
                         <td className="p-3 text-right">
                           <span className={`px-2 py-0.5 rounded-md text-xs font-medium ${
-                            agent.answerRate >= 80 ? 'bg-primary/10 text-primary border border-primary/20' :
-                            agent.answerRate >= 60 ? 'bg-accent text-accent-foreground border border-border' :
+                            agentData.answerRate >= 80 ? 'bg-primary/10 text-primary border border-primary/20' :
+                            agentData.answerRate >= 60 ? 'bg-accent text-accent-foreground border border-border' :
                             'bg-muted text-muted-foreground border border-border'
                           }`}>
-                            {agent.answerRate.toFixed(1)}%
+                            {agentData.answerRate.toFixed(1)}%
                           </span>
                         </td>
-                        <td className="p-3 text-right number-display">{formatDuration(agent.avgDuration)}</td>
-                        <td className="p-3 text-right number-display">{agent.conversions}</td>
+                        <td className="p-3 text-right number-display">{formatDuration(agentData.avgDuration)}</td>
+                        <td className="p-3 text-right number-display">{agentData.conversions}</td>
                         <td className="p-3 text-right">
                           <span className={`px-2 py-0.5 rounded-md text-xs font-medium ${
-                            agent.conversionRate >= 50 ? 'bg-primary/10 text-primary border border-primary/20' :
-                            agent.conversionRate >= 25 ? 'bg-accent text-accent-foreground border border-border' :
+                            agentData.conversionRate >= 50 ? 'bg-primary/10 text-primary border border-primary/20' :
+                            agentData.conversionRate >= 25 ? 'bg-accent text-accent-foreground border border-border' :
                             'bg-muted text-muted-foreground border border-border'
                           }`}>
-                            {agent.conversionRate.toFixed(1)}%
+                            {agentData.conversionRate.toFixed(1)}%
                           </span>
                         </td>
                         <td className="p-3 text-right">
-                          {agent.avgCallScore > 0 ? (
+                          {agentData.avgCallScore > 0 ? (
                             <span className={`px-2 py-0.5 rounded-md text-xs font-medium ${
-                              agent.avgCallScore >= 8 ? 'bg-primary/10 text-primary border border-primary/20' :
-                              agent.avgCallScore >= 6 ? 'bg-accent text-accent-foreground border border-border' :
+                              agentData.avgCallScore >= 8 ? 'bg-primary/10 text-primary border border-primary/20' :
+                              agentData.avgCallScore >= 6 ? 'bg-accent text-accent-foreground border border-border' :
                               'bg-muted text-muted-foreground border border-border'
                             }`}>
-                              {agent.avgCallScore.toFixed(1)}
+                              {agentData.avgCallScore.toFixed(1)}
                             </span>
                           ) : (
                             <span className="text-muted-foreground">N/A</span>

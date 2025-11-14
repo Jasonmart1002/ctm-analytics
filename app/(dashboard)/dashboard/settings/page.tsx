@@ -26,7 +26,7 @@ export default async function SettingsPage() {
   const org = await prisma.organization.findUnique({
     where: { clerkOrgId: orgId },
     include: {
-      users: {
+      User: {
         select: {
           id: true,
           email: true,
@@ -280,7 +280,7 @@ export default async function SettingsPage() {
                 )}
                 <div className="space-y-2">
                   <p className="text-sm font-medium text-muted-foreground">Team Members</p>
-                  <p className="text-3xl font-bold">{org?.users.length || 0}</p>
+                  <p className="text-3xl font-bold">{org?.User.length || 0}</p>
                 </div>
               </div>
             </CardContent>
@@ -384,8 +384,8 @@ export default async function SettingsPage() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {org?.users && org.users.length > 0 ? (
-                    org.users.map((member) => (
+                  {org?.User && org.User.length > 0 ? (
+                    org.User.map((member) => (
                       <div
                         key={member.id}
                         className="flex items-center justify-between p-4 border rounded-lg"

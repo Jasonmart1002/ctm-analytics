@@ -348,3 +348,66 @@ export async function getAgentComparison(organizationId: string, dateRange?: Dat
 
   return { agentMetrics: comparison, teamAverage: avgMetrics }
 }
+
+export async function getAgentLeaderboard(
+  organizationId: string,
+  dateRange: { startDate: Date; endDate: Date },
+  metric: 'conversions' | 'conversionRate'
+) {
+  const calls = await prisma.call.findMany({
+    where: {
+      organizationId,
+      date: { gte: dateRange.startDate, lte: dateRange.endDate },
+      agent: { not: null }
+    },
+  })
+
+  const agentData = calls.reduce((acc, call) => {
+    const agent = call.agent?.trim() || 'Unknown'
+    if (!acc[agent]) {
+      acc[agent] = {
+        agentName: agent,
+        totalCalls: 0,
+        conversions: 0,
+        conversionRate: 0,
+      }
+    }
+    acc[agent].totalCalls++
+    if (call.csrConversion) acc[agent].conversions++
+    return acc
+  }, {} as Record<string, {
+    agentName: string
+    totalCalls: number
+    conversions: number
+    conversionRate: number
+  }>)
+
+  const leaderboard = Object.values(agentData).map(data => ({
+    ...data,
+    conversionRate: data.totalCalls > 0 ? (data.conversions / data.totalCalls) * 100 : 0,
+  }))
+
+  if (metric === 'conversions') {
+    return leaderboard.sort((a, b) => b.conversions - a.conversions)
+  } else {
+    return leaderboard
+      .filter(a => a.totalCalls >= 10) // Only show agents with at least 10 calls
+      .sort((a, b) => b.conversionRate - a.conversionRate)
+  }
+}
+
+export function formatDuration(seconds: number): string {
+  if (!seconds || seconds === 0) return '0s'
+
+  const hours = Math.floor(seconds / 3600)
+  const minutes = Math.floor((seconds % 3600) / 60)
+  const secs = Math.floor(seconds % 60)
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`
+  } else if (minutes > 0) {
+    return `${minutes}m ${secs}s`
+  } else {
+    return `${secs}s`
+  }
+}

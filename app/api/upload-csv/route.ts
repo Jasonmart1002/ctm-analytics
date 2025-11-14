@@ -78,10 +78,13 @@ export async function POST(request: NextRequest) {
 
     if (!org) {
       console.log('[UPLOAD] Creating new organization...')
+      const orgId = `org_${Date.now()}_${Math.random().toString(36).substring(7)}`
       org = await prisma.organization.create({
         data: {
+          id: orgId,
           clerkOrgId: organizationId,
           name: 'Default Organization',
+          updatedAt: new Date(),
         }
       })
       console.log('[UPLOAD] Organization created:', org.id)
@@ -114,8 +117,10 @@ export async function POST(request: NextRequest) {
 
     // Prepare data for bulk insert
     const callsToInsert = parseResult.calls.map(call => ({
+      id: `call_${call.callId}_${Date.now()}_${Math.random().toString(36).substring(7)}`,
       callId: call.callId,
       organizationId: org.id,
+      updatedAt: new Date(),
 
       name: call.name,
       customerNumber: call.customerNumber,
