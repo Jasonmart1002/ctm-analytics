@@ -18,6 +18,9 @@ export const metadata: Metadata = {
   description: "Comprehensive call tracking metrics and analytics dashboard",
 };
 
+// Force dynamic rendering to prevent build-time errors with Clerk
+export const dynamic = 'force-dynamic';
+
 export default function RootLayout({
   children,
 }: Readonly<{
