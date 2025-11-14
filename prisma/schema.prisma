@@ -1,0 +1,198 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Agent {
+  id             String       @id
+  name           String
+  email          String?
+  organizationId String
+  active         Boolean      @default(true)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime
+  Organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([name, organizationId])
+  @@index([organizationId])
+}
+
+model Call {
+  id                               String       @id
+  callId                           String       @unique
+  organizationId                   String
+  accountId                        String?
+  accountName                      String?
+  name                             String?
+  customerNumber                   String?
+  email                            String?
+  phone                            String?
+  phoneType                        String?
+  carrier                          String?
+  gender                           String?
+  nameType                         String?
+  callStatus                       String?
+  direction                        String?
+  duration                         Int?
+  ringTime                         Int?
+  talkTime                         Int?
+  likelihood                       String?
+  messageBody                      String?
+  blocked                          Boolean      @default(false)
+  datetime                         DateTime?
+  date                             DateTime?
+  day                              String?
+  hourOfDay                        Int?
+  street                           String?
+  city                             String?
+  state                            String?
+  postalCode                       String?
+  country                          String?
+  visitorIP                        String?
+  trackingNumber                   String?
+  trackingSource                   String?
+  trackingNumberLabel              String?
+  campaign                         String?
+  source                           String?
+  medium                           String?
+  keyword                          String?
+  searchQuery                      String?
+  referralPage                     String?
+  lastURL                          String?
+  adMatchType                      String?
+  adContent                        String?
+  adSlot                           String?
+  adSlotPosition                   String?
+  adNetwork                        String?
+  creativeId                       String?
+  adGroupId                        String?
+  campaignId                       String?
+  adFormat                         String?
+  adTargetingType                  String?
+  adPlacement                      String?
+  googleClickId                    String?
+  googleUID                        String?
+  msClickId                        String?
+  csrName                          String?
+  csrCallScore                     Float?
+  csrConversion                    Boolean?
+  csrValue                         Decimal?
+  agent                            String?
+  browser                          String?
+  device                           String?
+  mobile                           Boolean?
+  receivingNumber                  String?
+  callPath                         String?
+  firstTransferPoint               String?
+  allTransferPoints                String[]     @default([])
+  menuKeyPress                     String?
+  audioWav                         String?
+  audioMP3                         String?
+  userAccessedRecording            Boolean      @default(false)
+  transcription                    String?
+  transcriptionLanguage            String?
+  transcriptionConfidence          Float?
+  summary                          String?
+  visitorSID                       String?
+  form                             String?
+  formName                         String?
+  customFields                     Json?
+  keywordSpotting                  String[]     @default([])
+  sourceTag                        String?
+  customVariables                  Json?
+  extendedLookupAge                String?
+  extendedLookupEducation          String?
+  extendedLookupHomeOwnerStatus    String?
+  extendedLookupLengthOfResidence  String?
+  extendedLookupHouseholdIncome    String?
+  extendedLookupMaritalStatus      String?
+  extendedLookupMarketValue        String?
+  extendedLookupOccupation         String?
+  extendedLookupPresenceOfChildren String?
+  extendedLookupFacebook           String?
+  extendedLookupLinkedin           String?
+  extendedLookupTwitter            String?
+  experiments                      String[]     @default([])
+  variations                       String[]     @default([])
+  vwoExperiments                   String[]     @default([])
+  vwoVariations                    String[]     @default([])
+  unbounceVariant                  String?
+  chatMessages                     Json?
+  tags                             String[]     @default([])
+  notes                            String?
+  createdAt                        DateTime     @default(now())
+  updatedAt                        DateTime
+  Organization                     Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([callId])
+  @@index([callStatus])
+  @@index([campaign])
+  @@index([csrName])
+  @@index([date])
+  @@index([datetime])
+  @@index([medium])
+  @@index([organizationId])
+  @@index([source])
+}
+
+model DailyMetric {
+  id             String   @id
+  date           DateTime
+  organizationId String
+  campaign       String?
+  source         String?
+  medium         String?
+  csrName        String?
+  state          String?
+  totalCalls     Int      @default(0)
+  totalDuration  Int      @default(0)
+  totalTalkTime  Int      @default(0)
+  totalRingTime  Int      @default(0)
+  conversions    Int      @default(0)
+  totalValue     Decimal  @default(0)
+  avgCallScore   Float?
+  blockedCalls   Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime
+
+  @@unique([date, organizationId, campaign, source, medium, csrName, state])
+  @@index([date])
+  @@index([organizationId])
+}
+
+model Organization {
+  id               String   @id
+  clerkOrgId       String   @unique
+  name             String
+  accountId        String?  @unique
+  subscriptionTier String   @default("free")
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime
+  Agent            Agent[]
+  Call             Call[]
+  User             User[]
+
+  @@index([clerkOrgId])
+}
+
+model User {
+  id             String       @id
+  clerkId        String       @unique
+  email          String       @unique
+  firstName      String?
+  lastName       String?
+  imageUrl       String?
+  role           String       @default("viewer")
+  organizationId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime
+  Organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([clerkId])
+  @@index([email])
+  @@index([organizationId])
+}
